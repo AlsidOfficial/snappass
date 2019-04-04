@@ -6,7 +6,7 @@ import uuid
 import redis
 
 from cryptography.fernet import Fernet
-from flask import abort, Flask, render_template, request
+from flask import abort, Flask, render_template, request, redirect
 from redis.exceptions import ConnectionError
 from werkzeug.urls import url_quote_plus
 from werkzeug.urls import url_unquote_plus
@@ -32,9 +32,15 @@ elif os.environ.get('REDIS_URL'):
 else:
     redis_host = os.environ.get('REDIS_HOST', 'localhost')
     redis_port = os.environ.get('REDIS_PORT', 6379)
+    redis_password = os.environ.get('REDIS_PASSWORD', 'password')
+    redis_tls = os.environ.get('REDIS_TLS', 'false')
     redis_db = os.environ.get('SNAPPASS_REDIS_DB', 0)
-    redis_client = redis.StrictRedis(
-        host=redis_host, port=redis_port, db=redis_db)
+    if redis_password[-1] != '=':
+        redis_password = redis_password + '='
+    if redis_tls == 'false':
+        redis_client = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_db, password=redis_password)
+    else:
+        redis_client = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_db, password=redis_password, ssl=True)
 REDIS_PREFIX = os.environ.get('REDIS_PREFIX', 'snappass')
 
 TIME_CONVERSION = {'week': 604800, 'day': 86400, 'hour': 3600}
@@ -150,13 +156,16 @@ def clean_input():
 
     return TIME_CONVERSION[time_period], request.form['password']
 
-
 @app.route('/', methods=['GET'])
 def index():
+    return redirect("https://www.alsid.com", code=302)
+
+@app.route('/create', methods=['GET'])
+def create_password():
     return render_template('set_password.html')
 
 
-@app.route('/', methods=['POST'])
+@app.route('/create', methods=['POST'])
 def handle_password():
     ttl, password = clean_input()
     token = set_password(password, ttl)
