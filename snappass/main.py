@@ -41,7 +41,7 @@ else:
         redis_client = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_db, password=redis_password)
     else:
         redis_client = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_db, password=redis_password, ssl=True)
-REDIS_PREFIX = os.environ.get('REDIS_PREFIX', 'snappass')
+REDIS_PREFIX = os.environ.get('REDIS_PREFIX', 'alsidpass')
 
 TIME_CONVERSION = {'week': 604800, 'day': 86400, 'hour': 3600}
 
